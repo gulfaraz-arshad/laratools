@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+          content="Free client-side Webhook HMAC-SHA256 and HMAC-SHA1 signature generator and verifier using the browser Web Crypto API. Zero secrets sent to any server.">
+    <title>Webhook HMAC-SHA256 &amp; SHA1 Signature Debugger | LaraTools.dev</title>
+    <link rel="canonical" href="https://laratools.dev/tools/webhook-hmac-tester.html">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9972929677112087"
+            crossorigin="anonymous"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .brand { font-family: 'Syne', sans-serif; }
+        .bg-grid {
+            background-color: #09090b;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+    </style>
+</head>
+<body class="bg-grid text-slate-200 antialiased min-h-screen flex flex-col">
+
+<div class="max-w-5xl mx-auto px-6 w-full flex-1">
+
+    <!-- Navbar -->
+    <nav class="flex justify-between items-center py-8 border-b border-slate-800/80">
+        <a href="/" class="brand text-xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+            <span class="px-2 py-0.5 rounded-lg bg-blue-600 text-xs font-mono text-white">LT</span>
+            <span>laratools<span class="text-blue-400">.dev</span></span>
+        </a>
+        <div class="flex items-center gap-6 text-xs font-medium text-slate-400">
+            <a href="/" class="text-blue-400">Tools</a>
+            <a href="/about.html" class="hover:text-white transition-colors">About</a>
+            <a href="/contact.html" class="hover:text-white transition-colors">Contact</a>
+            <a href="https://gulfaraz.me/blog/" target="_blank" rel="noopener" class="hover:text-white transition-colors">Engineering Blog &nearr;</a>
+        </div>
+    </nav>
+
+    <main class="py-10 space-y-12">
+
+        <!-- Tool Header -->
+        <header class="space-y-3">
+            <div class="inline-block text-[11px] font-semibold uppercase tracking-widest text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
+                API &amp; Webhook Security
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold text-white tracking-tight">
+                Webhook <span class="text-blue-400">HMAC Signature</span> Debugger
+            </h1>
+            <p class="text-slate-400 max-w-2xl text-sm md:text-base leading-relaxed">
+                Compute and verify <code class="text-cyan-300">HMAC-SHA256</code> or <code class="text-cyan-300">HMAC-SHA1</code> signatures in Hex and Base64 using your browser's native Web Crypto API—your signing secrets never leave your machine.
+            </p>
+        </header>
+
+        <!-- Interactive Tool UI -->
+        <section class="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6">
+            <div class="flex flex-wrap justify-between items-center gap-3">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Payload &amp; Signing Key</span>
+                <button type="button" onclick="loadWebhookSample()"
+                        class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                    Load Sample JSON Payload
+                </button>
+            </div>
+
+            <div>
+                <label for="webhook-payload" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                    Raw Request Body (Exact Bytes)
+                </label>
+                <textarea id="webhook-payload" rows="5"
+                          class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-xs md:text-sm text-cyan-300 focus:outline-none focus:border-blue-500"
+                          placeholder='{"event":"call.completed","call_sid":"CA1234567890","duration":42}'></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="webhook-secret" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        Signing Secret / Auth Token
+                    </label>
+                    <input type="text" id="webhook-secret" placeholder="whsec_test_secret_key"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-sm text-cyan-300 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="hmac-algo" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        Hash Algorithm
+                    </label>
+                    <select id="hmac-algo"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                        <option value="SHA-256" selected>HMAC-SHA256 (Stripe / GitHub / Svix)</option>
+                        <option value="SHA-1">HMAC-SHA1 (Twilio / Legacy Webhooks)</option>
+                        <option value="SHA-512">HMAC-SHA512</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="expected-sig" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        Expected Header Signature (Optional)
+                    </label>
+                    <input type="text" id="expected-sig" placeholder="sha256=... or base64 string"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-sm text-slate-200 focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4">
+                <button type="button" onclick="computeHmac()"
+                        class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors">
+                    Compute &amp; Verify Signature
+                </button>
+                <span class="text-xs text-slate-500">Uses <code class="text-slate-400">window.crypto.subtle</code> locally &bull; Zero network calls</span>
+            </div>
+
+            <div id="hmac-result" class="hidden rounded-2xl bg-slate-950 border border-slate-800 p-6 space-y-4"></div>
+        </section>
+
+        <!-- Technical Guide & FAQ -->
+        <article class="max-w-3xl space-y-6 text-slate-300 text-sm md:text-[15px] leading-relaxed pt-4 border-t border-slate-800/80">
+            <h2 class="text-2xl font-bold text-white">Debugging Webhook Signature Mismatches in Laravel</h2>
+            <p>
+                Webhook providers such as Stripe, GitHub, Twilio, and SignalWire sign outbound HTTP requests using a shared secret and an HMAC (Hash-based Message Authentication Code) digest. When signature verification fails in production with a <code class="text-blue-300">401 Unauthorized</code> or <code class="text-blue-300">403 Forbidden</code>, the culprit is almost always whitespace or encoding drift between the raw HTTP body and a re-serialized JSON object.
+            </p>
+
+            <h3 class="text-xl font-bold text-white pt-2">3 Common Causes of Invalid Webhook Signatures</h3>
+            <ul class="list-disc pl-6 space-y-2 text-slate-300">
+                <li><strong class="text-white">Hashing <code class="text-blue-300">json_encode($request-&gt;all())</code> instead of raw bytes:</strong> PHP's <code class="text-blue-300">json_encode()</code> escapes forward slashes (<code class="text-blue-300">/</code> &rarr; <code class="text-blue-300">\/</code>) by default and strips original whitespace, producing a completely different HMAC digest. Always hash <code class="text-blue-300">$request-&gt;getContent()</code> in Laravel.</li>
+                <li><strong class="text-white">Hex vs. Base64 encoding mismatch:</strong> GitHub and Stripe encode HMAC-SHA256 digests as lowercase hexadecimal strings (often prefixed with <code class="text-blue-300">sha256=</code>), whereas Twilio and standard AWS/Svix signatures use Base64 encoding.</li>
+                <li><strong class="text-white">Signed timestamp prefixes:</strong> Several providers concatenate a Unix timestamp and a dot (<code class="text-blue-300">1732100000.{raw_body}</code>) before hashing to prevent replay attacks.</li>
+            </ul>
+
+            <h3 class="text-xl font-bold text-white pt-2">Frequently Asked Questions</h3>
+            <div class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-white">Why should I use <code class="text-blue-300">hash_equals()</code> in PHP instead of <code class="text-blue-300">===</code>?</h4>
+                    <p class="text-slate-400">Standard string comparison (<code class="text-blue-300">===</code>) exits on the first mismatched byte, leaking timing side-channel information. Always compare signatures using <code class="text-blue-300">hash_equals($expected,$computed)</code> in Laravel middleware.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-white">Are my webhook secrets safe in this tool?</h4>
+                    <p class="text-slate-400">Yes. All cryptographic operations execute directly inside your browser via the W3C Web Crypto API (<code class="text-blue-300">crypto.subtle.sign</code>). Neither your payload nor your secret key is ever transmitted over the network.</p>
+                </div>
+            </div>
+        </article>
+
+    </main>
+</div>
+
+<!-- Footer -->
+<footer class="max-w-5xl mx-auto px-6 w-full py-10 mt-12 border-t border-slate-800 text-xs text-slate-500 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div class="space-y-1.5">
+        <p class="text-slate-400">&copy; 2026 LaraTools.dev &mdash; Built by <a href="https://gulfaraz.me" class="text-blue-400 hover:underline">Gulfaraz Arshad</a></p>
+        <p class="text-[11px] text-slate-600">Not affiliated with or endorsed by Laravel Holdings Inc. Laravel is a registered trademark of Laravel Holdings Inc.</p>
+    </div>
+    <div class="flex flex-wrap gap-5">
+        <a href="/about.html" class="hover:text-slate-300 transition-colors">About</a>
+        <a href="/contact.html" class="hover:text-slate-300 transition-colors">Contact</a>
+        <a href="/privacy-policy.html" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+        <a href="/terms.html" class="hover:text-slate-300 transition-colors">Terms of Use</a>
+    </div>
+</footer>
+
+<script>
+    function loadWebhookSample() {
+        document.getElementById('webhook-payload').value = '{"event":"call.completed","call_sid":"CA98f12c4b8e71a","from":"+15550192834","duration_sec":148}';
+        document.getElementById('webhook-secret').value = 'whsec_9f8e7d6c5b4a3210';
+        computeHmac();
+    }
+
+    async function computeHmac() {
+        const payload = document.getElementById('webhook-payload').value;
+        const secret = document.getElementById('webhook-secret').value;
+        const algo = document.getElementById('hmac-algo').value;
+        const expectedRaw = document.getElementById('expected-sig').value.trim();
+        const box = document.getElementById('hmac-result');
+
+        if (!secret) {
+            box.classList.remove('hidden');
+            box.innerHTML = '<p class="text-xs text-amber-400">Please enter a signing secret key.</p>';
+            return;
+        }
+
+        const enc = new TextEncoder();
+        const key = await crypto.subtle.importKey(
+            'raw',
+            enc.encode(secret),
+            { name: 'HMAC', hash: { name: algo } },
+            false,
+            ['sign']
+        );
+
+        const sigBuffer = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
+        const bytes = new Uint8Array(sigBuffer);
+
+        const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        let binary = '';
+        bytes.forEach(b => binary += String.fromCharCode(b));
+        const base64 = btoa(binary);
+
+        const prefix = algo === 'SHA-256' ? 'sha256=' : (algo === 'SHA-1' ? 'sha1=' : 'sha512=');
+        const prefixedHex = prefix + hex;
+
+        let matchBanner = '';
+        if (expectedRaw) {
+            const cleanExpected = expectedRaw.replace(/^sha(1|256|512)=/i, '');
+            const matched = cleanExpected.toLowerCase() === hex.toLowerCase() || expectedRaw === base64;
+            matchBanner = matched
+                ? '<div class="px-4 py-2.5 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-xs font-semibold text-emerald-400">Signature Verified: Matches expected header digest.</div>'
+                : '<div class="px-4 py-2.5 rounded-xl bg-rose-950/50 border border-rose-500/40 text-xs font-semibold text-rose-400">Signature Mismatch: Computed digest does not match expected header.</div>';
+        }
+
+        const phpAlgo = algo.toLowerCase().replace('-', '');
+        const laravelSnippet = `$computed = hash_hmac('${phpAlgo}', $request->getContent(), config('services.webhook.secret'));\nabort_unless(hash_equals($computed, $request->header('X-Signature')), 401);`;
+
+        box.classList.remove('hidden');
+        box.innerHTML = `
+            ${matchBanner}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div class="space-y-1.5">
+                    <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Hex Digest (${prefixedHex.slice(0, 7)}...)</span>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 font-mono text-cyan-300 break-all">${hex}</div>
+                </div>
+                <div class="space-y-1.5">
+                    <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Base64 Digest (Twilio / Svix)</span>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 font-mono text-cyan-300 break-all">${base64}</div>
+                </div>
+            </div>
+            <div class="space-y-1.5 pt-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Laravel Constant-Time Verification</span>
+                    <button type="button" id="copy-hmac-php" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Copy PHP</button>
+                </div>
+                <pre class="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5 text-xs text-cyan-300 overflow-x-auto"><code>${laravelSnippet}</code></pre>
+            </div>
+        `;
+
+        document.getElementById('copy-hmac-php').addEventListener('click', function () {
+            navigator.clipboard.writeText(laravelSnippet);
+            this.innerText = 'Copied!';
+            setTimeout(() => this.innerText = 'Copy PHP', 1500);
+        });
+    }
+</script>
+
+</body>
+</html>

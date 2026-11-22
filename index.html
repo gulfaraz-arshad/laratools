@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+          content="Free, client-side developer utilities for Laravel, MySQL 8.4 performance tuning, webhook HMAC debugging, and PHP 8.2+ DTO generation.">
+    <meta property="og:title" content="LaraTools.dev | Free Laravel, MySQL & API Developer Utilities">
+    <meta property="og:description" content="Zero-latency, browser-based developer tools built for Laravel and MySQL engineers.">
+    <title>LaraTools.dev | Free Laravel, MySQL &amp; API Developer Utilities</title>
+    <link rel="canonical" href="https://laratools.dev/">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9972929677112087"
+            crossorigin="anonymous"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        h1, h2, h3, .brand { font-family: 'Syne', sans-serif; }
+        .gradient-text {
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .bg-grid {
+            background-color: #09090b;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+        .tool-card { transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
+        .tool-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(59, 130, 246, 0.45);
+            box-shadow: 0 18px 36px rgba(59, 130, 246, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-grid text-slate-200 antialiased selection:bg-blue-500/30 min-h-screen flex flex-col">
+
+<div class="max-w-5xl mx-auto px-6 w-full flex-1">
+
+    <!-- Navbar -->
+    <nav class="flex justify-between items-center py-8 border-b border-slate-800/80">
+        <a href="/" class="brand text-xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+            <span class="px-2 py-0.5 rounded-lg bg-blue-600 text-xs font-mono text-white">LT</span>
+            <span>laratools<span class="text-blue-400">.dev</span></span>
+        </a>
+        <div class="flex items-center gap-6 text-xs font-medium text-slate-400">
+            <a href="/" class="text-blue-400">Tools</a>
+            <a href="/about.html" class="hover:text-white transition-colors">About</a>
+            <a href="/contact.html" class="hover:text-white transition-colors">Contact</a>
+            <a href="https://gulfaraz.me/blog/" target="_blank" rel="noopener" class="hover:text-white transition-colors">Engineering Blog &nearr;</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="py-14 space-y-6">
+        <div class="inline-flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-widest bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 rounded-full">
+            <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
+            100% Client-Side &bull; Zero Data Leaves Your Browser
+        </div>
+        <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight">
+            Developer Utilities for<br><span class="gradient-text">Laravel, MySQL &amp; APIs</span>
+        </h1>
+        <p class="text-base md:text-lg text-slate-400 max-w-2xl leading-relaxed">
+            Fast, privacy-first tools built for backend engineers. Analyze MySQL 8.4 DDL locks, generate PHP 8.2+ <code class="text-cyan-300 text-sm">readonly</code> DTOs, verify webhook HMAC signatures, and size Laravel Horizon queues locally in your browser.
+        </p>
+
+        <!-- Search & Filter Bar -->
+        <div class="pt-2 flex flex-col sm:flex-row gap-3 max-w-2xl">
+            <input type="text" id="tool-search" placeholder="Search tools (e.g. INSTANT, HMAC, DTO, Index, Horizon)..."
+                   class="flex-1 bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            <select id="category-filter"
+                    class="bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-300 focus:outline-none focus:border-blue-500">
+                <option value="all">All Categories</option>
+                <option value="mysql">MySQL 8.4</option>
+                <option value="laravel">Laravel &amp; PHP</option>
+                <option value="api">API &amp; Webhooks</option>
+            </select>
+        </div>
+    </header>
+
+    <!-- Tools Grid -->
+    <section class="pb-16">
+        <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Tool 1 -->
+            <a href="/tools/mysql-instant-checker.html" data-category="mysql" data-keywords="mysql 8.4 alter table algorithm instant ddl migration lock"
+               class="tool-card block p-7 rounded-3xl bg-slate-900/40 border border-slate-800 group">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">MySQL 8.4</span>
+                    <span class="text-xs text-slate-500 group-hover:text-blue-400 transition-colors">Open Tool &rarr;</span>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                    ALGORITHM=INSTANT Migration Checker
+                </h2>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Validate <code class="text-cyan-300 text-xs">ALTER TABLE</code> statements before touching multi-million row tables. Detects blocking rebuilds, row-version limits, and generates safe <code class="text-cyan-300 text-xs">DB::statement()</code> wrappers.
+                </p>
+            </a>
+
+            <!-- Tool 2 -->
+            <a href="/tools/composite-index-builder.html" data-category="mysql" data-keywords="mysql composite index b-tree order by where laravel schema migration"
+               class="tool-card block p-7 rounded-3xl bg-slate-900/40 border border-slate-800 group">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">MySQL 8.4</span>
+                    <span class="text-xs text-slate-500 group-hover:text-blue-400 transition-colors">Open Tool &rarr;</span>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                    Composite Index &amp; Migration Builder
+                </h2>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Input your <code class="text-cyan-300 text-xs">WHERE</code>, <code class="text-cyan-300 text-xs">ORDER BY</code>, and range predicates to compute the optimal Equality &rarr; Sort &rarr; Range B-Tree index order and Laravel migration code.
+                </p>
+            </a>
+
+            <!-- Tool 3 -->
+            <a href="/tools/webhook-hmac-tester.html" data-category="api" data-keywords="webhook hmac sha256 sha1 signature twilio signalwire stripe security"
+               class="tool-card block p-7 rounded-3xl bg-slate-900/40 border border-slate-800 group">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">API &amp; Security</span>
+                    <span class="text-xs text-slate-500 group-hover:text-blue-400 transition-colors">Open Tool &rarr;</span>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                    Webhook HMAC Signature Debugger
+                </h2>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Compute and verify <code class="text-cyan-300 text-xs">HMAC-SHA256</code> and <code class="text-cyan-300 text-xs">HMAC-SHA1</code> signatures in Hex or Base64 using the native browser Web Crypto API—your secret keys never leave your device.
+                </p>
+            </a>
+
+            <!-- Tool 4 -->
+            <a href="/tools/json-to-laravel-dto.html" data-category="laravel" data-keywords="json php 8.2 8.4 readonly class dto data transfer object laravel"
+               class="tool-card block p-7 rounded-3xl bg-slate-900/40 border border-slate-800 group">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">Laravel &amp; PHP 8.2+</span>
+                    <span class="text-xs text-slate-500 group-hover:text-blue-400 transition-colors">Open Tool &rarr;</span>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                    JSON to PHP 8.2+ Readonly DTO Generator
+                </h2>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Paste any REST API JSON payload to generate a strict-typed <code class="text-cyan-300 text-xs">final readonly class</code> with promoted constructor properties and a <code class="text-cyan-300 text-xs">fromArray()</code> hydrator.
+                </p>
+            </a>
+
+            <!-- Tool 5 -->
+            <a href="/tools/horizon-worker-calculator.html" data-category="laravel" data-keywords="laravel horizon redis queue worker memory ram throughput calculator"
+               class="tool-card block p-7 rounded-3xl bg-slate-900/40 border border-slate-800 group">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">Laravel &amp; Redis</span>
+                    <span class="text-xs text-slate-500 group-hover:text-blue-400 transition-colors">Open Tool &rarr;</span>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                    Laravel Horizon &amp; Redis Worker Calculator
+                </h2>
+                <p class="text-slate-400 text-sm leading-relaxed">
+                    Calculate peak jobs/minute throughput, queue drain time, and worst-case server RAM footprint across Horizon supervisors to prevent Linux OOM-killer crashes.
+                </p>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- Why Client-Side Section (Publisher Content for SEO & AdSense) -->
+    <section class="py-12 border-t border-slate-800/80 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+        <div class="space-y-2">
+            <h3 class="text-white font-bold text-base">Zero Server Logging</h3>
+            <p class="text-slate-400 leading-relaxed">
+                Production database schemas, API payloads, and webhook secrets should never be pasted into third-party backends. Every utility on LaraTools runs 100% locally in browser JavaScript.
+            </p>
+        </div>
+        <div class="space-y-2">
+            <h3 class="text-white font-bold text-base">Production-Tested Patterns</h3>
+            <p class="text-slate-400 leading-relaxed">
+                Built around real high-throughput Laravel and MySQL 8.4 workloads—prioritizing <code class="text-cyan-300 text-xs">ALGORITHM=INSTANT</code> safety, strict typing, and predictable memory usage.
+            </p>
+        </div>
+        <div class="space-y-2">
+            <h3 class="text-white font-bold text-base">Copy-Paste Ready Output</h3>
+            <p class="text-slate-400 leading-relaxed">
+                Each tool outputs clean, PSR-12 compliant PHP and SQL snippets accompanied by practical engineering notes and edge-case checklists.
+            </p>
+        </div>
+    </section>
+
+</div>
+
+<!-- Footer -->
+<footer class="max-w-5xl mx-auto px-6 w-full py-10 border-t border-slate-800 text-xs text-slate-500 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div class="space-y-1.5">
+        <p class="text-slate-400">&copy; 2026 LaraTools.dev &mdash; Built by <a href="https://gulfaraz.me" class="text-blue-400 hover:underline">Gulfaraz Arshad</a></p>
+        <p class="text-[11px] text-slate-600">Not affiliated with or endorsed by Laravel Holdings Inc. Laravel is a registered trademark of Laravel Holdings Inc.</p>
+    </div>
+    <div class="flex flex-wrap gap-5">
+        <a href="/about.html" class="hover:text-slate-300 transition-colors">About</a>
+        <a href="/contact.html" class="hover:text-slate-300 transition-colors">Contact</a>
+        <a href="/privacy-policy.html" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+        <a href="/terms.html" class="hover:text-slate-300 transition-colors">Terms of Use</a>
+    </div>
+</footer>
+
+<script>
+    const searchInput = document.getElementById('tool-search');
+    const categoryFilter = document.getElementById('category-filter');
+    const cards = document.querySelectorAll('#tools-grid .tool-card');
+
+    function filterTools() {
+        const query = searchInput.value.toLowerCase().trim();
+        const cat = categoryFilter.value;
+
+        cards.forEach(card => {
+            const matchesCat = cat === 'all' || card.dataset.category === cat;
+            const text = (card.innerText + ' ' + card.dataset.keywords).toLowerCase();
+            const matchesQuery = !query || text.includes(query);
+            card.style.display = (matchesCat && matchesQuery) ? 'block' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterTools);
+    categoryFilter.addEventListener('change', filterTools);
+</script>
+
+</body>
+</html>

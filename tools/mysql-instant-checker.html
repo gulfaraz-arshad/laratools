@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+          content="Free MySQL 8.4 ALGORITHM=INSTANT DDL migration checker. Detect blocking table rebuilds, row-version limits, and generate safe Laravel DB::statement() migrations.">
+    <title>MySQL 8.4 ALGORITHM=INSTANT Migration Checker | LaraTools.dev</title>
+    <link rel="canonical" href="https://laratools.dev/tools/mysql-instant-checker.html">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9972929677112087"
+            crossorigin="anonymous"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .brand { font-family: 'Syne', sans-serif; }
+        .bg-grid {
+            background-color: #09090b;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+    </style>
+</head>
+<body class="bg-grid text-slate-200 antialiased min-h-screen flex flex-col">
+
+<div class="max-w-5xl mx-auto px-6 w-full flex-1">
+
+    <!-- Navbar -->
+    <nav class="flex justify-between items-center py-8 border-b border-slate-800/80">
+        <a href="/" class="brand text-xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+            <span class="px-2 py-0.5 rounded-lg bg-blue-600 text-xs font-mono text-white">LT</span>
+            <span>laratools<span class="text-blue-400">.dev</span></span>
+        </a>
+        <div class="flex items-center gap-6 text-xs font-medium text-slate-400">
+            <a href="/" class="text-blue-400">Tools</a>
+            <a href="/about.html" class="hover:text-white transition-colors">About</a>
+            <a href="/contact.html" class="hover:text-white transition-colors">Contact</a>
+            <a href="https://gulfaraz.me/blog/" target="_blank" rel="noopener" class="hover:text-white transition-colors">Engineering Blog &nearr;</a>
+        </div>
+    </nav>
+
+    <main class="py-10 space-y-12">
+
+        <!-- Tool Header -->
+        <header class="space-y-3">
+            <div class="inline-block text-[11px] font-semibold uppercase tracking-widest text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
+                MySQL 8.4 Schema Safety
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold text-white tracking-tight">
+                MySQL <span class="text-blue-400">ALGORITHM=INSTANT</span> Checker
+            </h1>
+            <p class="text-slate-400 max-w-2xl text-sm md:text-base leading-relaxed">
+                Paste your <code class="text-cyan-300">ALTER TABLE</code> statement below to check whether MySQL 8.4 InnoDB can execute it via metadata-only <code class="text-cyan-300">ALGORITHM=INSTANT</code> or if it will trigger an <code class="text-cyan-300">INPLACE</code> / <code class="text-cyan-300">COPY</code> table rebuild.
+            </p>
+        </header>
+
+        <!-- Interactive Tool UI -->
+        <section class="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6">
+            <div class="flex flex-wrap justify-between items-center gap-3">
+                <label for="sql-input" class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    ALTER TABLE DDL Statement
+                </label>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="loadSample('instant')"
+                            class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                        Sample: Safe INSTANT
+                    </button>
+                    <button type="button" onclick="loadSample('rebuild')"
+                            class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                        Sample: Blocking Rebuild
+                    </button>
+                </div>
+            </div>
+
+            <textarea id="sql-input" rows="5"
+                      class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-xs md:text-sm text-cyan-300 focus:outline-none focus:border-blue-500"
+                      placeholder="ALTER TABLE contacts ADD COLUMN opt_out_source VARCHAR(32) NULL AFTER status;"></textarea>
+
+            <div class="flex flex-wrap items-center gap-4">
+                <button type="button" onclick="analyzeDDL()"
+                        class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors">
+                    Analyze DDL Statement
+                </button>
+                <span class="text-xs text-slate-500">100% browser-based &bull; Zero SQL sent over the network</span>
+            </div>
+
+            <div id="result-box" class="hidden rounded-2xl border p-6 space-y-4"></div>
+        </section>
+
+        <!-- Technical Guide & FAQ (SEO + AdSense Value) -->
+        <article class="max-w-3xl space-y-6 text-slate-300 text-sm md:text-[15px] leading-relaxed pt-4 border-t border-slate-800/80">
+            <h2 class="text-2xl font-bold text-white">How MySQL 8.4 ALGORITHM=INSTANT Works</h2>
+            <p>
+                On production InnoDB tables with tens of millions of rows, an unguarded <code class="text-blue-300">ALTER TABLE</code> can saturate disk I/O, stall replication replicas, and trigger metadata lock pileups across PHP-FPM workers. When an operation supports <code class="text-blue-300">ALGORITHM=INSTANT</code>, MySQL 8.4 updates only the data dictionary metadata without touching existing data pages—completing in milliseconds regardless of table size.
+            </p>
+
+            <h3 class="text-xl font-bold text-white pt-2">DDL Operations Supported by INSTANT in MySQL 8.4</h3>
+            <ul class="list-disc pl-6 space-y-2 text-slate-300">
+                <li><strong class="text-white">Adding columns at any position:</strong> Unlike MySQL 8.0.12–8.0.28 (which restricted instant additions to the trailing column), MySQL 8.0.29+ and 8.4 use InnoDB row versioning to support <code class="text-blue-300">ADD COLUMN ... AFTER col_name</code> instantly.</li>
+                <li><strong class="text-white">Dropping columns:</strong> <code class="text-blue-300">DROP COLUMN</code> completes instantly unless the column is referenced by a primary key, secondary index, or foreign key constraint.</li>
+                <li><strong class="text-white">Renaming &amp; default changes:</strong> Renaming a column without changing its type or modifying <code class="text-blue-300">SET DEFAULT</code> / <code class="text-blue-300">DROP DEFAULT</code> executes as metadata-only.</li>
+            </ul>
+
+            <h3 class="text-xl font-bold text-white pt-2">Edge Cases That Force an INPLACE or COPY Rebuild</h3>
+            <ul class="list-disc pl-6 space-y-2 text-slate-300">
+                <li><strong class="text-white">The 64 Row-Version Ceiling:</strong> Each instant column add or drop increments <code class="text-blue-300">TOTAL_ROW_VERSIONS</code> in <code class="text-blue-300">INFORMATION_SCHEMA.INNODB_TABLES</code>. Once a table hits 64 row versions, the next DDL forces a full table rebuild (<code class="text-blue-300">OPTIMIZE TABLE</code> resets this counter).</li>
+                <li><strong class="text-white">FULLTEXT Indexes &amp; Compressed Tables:</strong> Tables containing a <code class="text-blue-300">FULLTEXT</code> index or configured with <code class="text-blue-300">ROW_FORMAT=COMPRESSED</code> cannot use <code class="text-blue-300">ALGORITHM=INSTANT</code>.</li>
+                <li><strong class="text-white">Column Type or Nullability Changes:</strong> Switching <code class="text-blue-300">NULL</code> to <code class="text-blue-300">NOT NULL</code> or changing data types requires scanning existing rows.</li>
+            </ul>
+
+            <h3 class="text-xl font-bold text-white pt-2">Frequently Asked Questions</h3>
+            <div class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-white">How do I enforce INSTANT inside a Laravel migration?</h4>
+                    <p class="text-slate-400">Instead of relying on Laravel's blueprint builder (which omits explicit algorithm clauses), execute a raw <code class="text-blue-300">DB::statement()</code> appending <code class="text-blue-300">ALGORITHM=INSTANT, LOCK=NONE</code>. If MySQL cannot satisfy it instantaneously, it fails immediately rather than silently locking production.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-white">Can ALGORITHM=INSTANT still block queries?</h4>
+                    <p class="text-slate-400">Yes, briefly. MySQL still acquires an exclusive Metadata Lock (MDL) for a split second at the start and commit phase. If a long-running analytical query or unclosed transaction is open on the table, the DDL waits behind it and queues subsequent writes.</p>
+                </div>
+            </div>
+        </article>
+
+    </main>
+</div>
+
+<!-- Footer -->
+<footer class="max-w-5xl mx-auto px-6 w-full py-10 mt-12 border-t border-slate-800 text-xs text-slate-500 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div class="space-y-1.5">
+        <p class="text-slate-400">&copy; 2026 LaraTools.dev &mdash; Built by <a href="https://gulfaraz.me" class="text-blue-400 hover:underline">Gulfaraz Arshad</a></p>
+        <p class="text-[11px] text-slate-600">Not affiliated with or endorsed by Laravel Holdings Inc. Laravel is a registered trademark of Laravel Holdings Inc.</p>
+    </div>
+    <div class="flex flex-wrap gap-5">
+        <a href="/about.html" class="hover:text-slate-300 transition-colors">About</a>
+        <a href="/contact.html" class="hover:text-slate-300 transition-colors">Contact</a>
+        <a href="/privacy-policy.html" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+        <a href="/terms.html" class="hover:text-slate-300 transition-colors">Terms of Use</a>
+    </div>
+</footer>
+
+<script>
+    function loadSample(type) {
+        const input = document.getElementById('sql-input');
+        if (type === 'instant') {
+            input.value = 'ALTER TABLE contacts ADD COLUMN opt_out_source VARCHAR(32) NULL AFTER status, ALGORITHM=INSTANT, LOCK=NONE;';
+        } else {
+            input.value = 'ALTER TABLE contacts MODIFY COLUMN phone BIGINT NOT NULL, ADD INDEX idx_phone (phone);';
+        }
+        analyzeDDL();
+    }
+
+    function copySnippet(btn, text) {
+        navigator.clipboard.writeText(text);
+        const orig = btn.innerText;
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = orig, 1500);
+    }
+
+    function analyzeDDL() {
+        const raw = document.getElementById('sql-input').value.trim();
+        const box = document.getElementById('result-box');
+        if (!raw) return;
+
+        const sql = raw.replace(/\s+/g, ' ').toUpperCase();
+        const issues = [];
+        const notes = [];
+
+        if (!sql.startsWith('ALTER TABLE')) {
+            issues.push('Statement must begin with ALTER TABLE.');
+        }
+        if (/\bMODIFY\s+COLUMN\b|\bCHANGE\s+COLUMN\b/.test(sql)) {
+            issues.push('MODIFY/CHANGE COLUMN detected: Changing column types, byte lengths, or nullability triggers INPLACE/COPY rebuilds.');
+        }
+        if (/\bADD\s+(UNIQUE\s+)?(INDEX|KEY)\b/.test(sql)) {
+            issues.push('ADD INDEX detected: Secondary index builds use ALGORITHM=INPLACE (allows concurrent DML, but scans table and builds sort buffers—not INSTANT).');
+        }
+        if (/\bADD\s+FULLTEXT\b/.test(sql)) {
+            issues.push('FULLTEXT index detected: Tables with FULLTEXT indexes do not support ALGORITHM=INSTANT.');
+        }
+        if (/\bADD\s+FOREIGN\s+KEY\b/.test(sql)) {
+            issues.push('FOREIGN KEY detected: Requires ALGORITHM=INPLACE with foreign_key_checks validation.');
+        }
+        if (/\bENGINE\s*=|\bROW_FORMAT\s*=\s*COMPRESSED\b|\bCONVERT\s+TO\s+CHARACTER\s+SET\b/.test(sql)) {
+            issues.push('Table rebuild clause detected (ENGINE, ROW_FORMAT=COMPRESSED, or charset conversion).');
+        }
+
+        if (/\bADD\s+COLUMN\b/.test(sql)) {
+            notes.push('ADD COLUMN supports ALGORITHM=INSTANT in MySQL 8.4 (including AFTER col_name) provided TOTAL_ROW_VERSIONS < 64 and no FULLTEXT index exists.');
+        }
+        if (/\bDROP\s+COLUMN\b/.test(sql)) {
+            notes.push('DROP COLUMN supports ALGORITHM=INSTANT in MySQL 8.4 provided the column is not part of any index.');
+        }
+        if (/\bRENAME\s+COLUMN\b/.test(sql)) {
+            notes.push('RENAME COLUMN is metadata-only and compatible with ALGORITHM=INSTANT.');
+        }
+
+        const tableMatch = raw.match(/ALTER\s+TABLE\s+`?([a-zA-Z0-9_]+)`?/i);
+        const tableName = tableMatch ? tableMatch[1] : 'your_table';
+        const cleanBody = raw
+            .replace(/^ALTER\s+TABLE\s+`?[a-zA-Z0-9_]+`?\s*/i, '')
+            .replace(/;$/, '')
+            .replace(/,?\s*ALGORITHM\s*=\s*\w+/ig, '')
+            .replace(/,?\s*LOCK\s*=\s*\w+/ig, '')
+            .trim();
+
+        const isInstant = issues.length === 0;
+        const phpSnippet = `DB::statement("ALTER TABLE \`${tableName}\` ${cleanBody}, ALGORITHM=${isInstant ? 'INSTANT' : 'INPLACE'}, LOCK=NONE");`;
+
+        box.className = `rounded-2xl border p-6 space-y-4 ${isInstant ? 'bg-emerald-950/30 border-emerald-500/40' : 'bg-amber-950/30 border-amber-500/40'}`;
+        box.classList.remove('hidden');
+
+        box.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="font-bold text-sm ${isInstant ? 'text-emerald-400' : 'text-amber-400'}">
+                    ${isInstant ? 'Compatible with ALGORITHM=INSTANT' : 'Requires INPLACE or COPY (Not Pure INSTANT)'}
+                </span>
+                <span class="text-[11px] font-mono text-slate-400">MySQL 8.4 InnoDB</span>
+            </div>
+            ${issues.length ? `<ul class="list-disc pl-5 text-xs text-amber-200 space-y-1">${issues.map(i => `<li>${i}</li>`).join('')}</ul>` : ''}
+            ${notes.length ? `<ul class="list-disc pl-5 text-xs text-slate-300 space-y-1">${notes.map(n => `<li>${n}</li>`).join('')}</ul>` : ''}
+            <div class="space-y-2 pt-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Safe Laravel Migration Wrapper</span>
+                    <button type="button" id="copy-ddl-btn" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Copy PHP</button>
+                </div>
+                <pre class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs text-cyan-300 overflow-x-auto"><code>${phpSnippet.replace(/</g, '&lt;')}</code></pre>
+            </div>
+        `;
+
+        document.getElementById('copy-ddl-btn').addEventListener('click', function () {
+            copySnippet(this, phpSnippet);
+        });
+    }
+</script>
+
+</body>
+</html>

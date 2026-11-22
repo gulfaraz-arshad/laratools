@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+          content="Convert JSON API payloads into strict-typed PHP 8.2+ final readonly class Data Transfer Objects (DTOs) with fromArray() and toArray() methods for Laravel.">
+    <title>JSON to PHP 8.2+ Readonly DTO Generator for Laravel | LaraTools.dev</title>
+    <link rel="canonical" href="https://laratools.dev/tools/json-to-laravel-dto.html">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9972929677112087"
+            crossorigin="anonymous"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .brand { font-family: 'Syne', sans-serif; }
+        .bg-grid {
+            background-color: #09090b;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+    </style>
+</head>
+<body class="bg-grid text-slate-200 antialiased min-h-screen flex flex-col">
+
+<div class="max-w-5xl mx-auto px-6 w-full flex-1">
+
+    <!-- Navbar -->
+    <nav class="flex justify-between items-center py-8 border-b border-slate-800/80">
+        <a href="/" class="brand text-xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+            <span class="px-2 py-0.5 rounded-lg bg-blue-600 text-xs font-mono text-white">LT</span>
+            <span>laratools<span class="text-blue-400">.dev</span></span>
+        </a>
+        <div class="flex items-center gap-6 text-xs font-medium text-slate-400">
+            <a href="/" class="text-blue-400">Tools</a>
+            <a href="/about.html" class="hover:text-white transition-colors">About</a>
+            <a href="/contact.html" class="hover:text-white transition-colors">Contact</a>
+            <a href="https://gulfaraz.me/blog/" target="_blank" rel="noopener" class="hover:text-white transition-colors">Engineering Blog &nearr;</a>
+        </div>
+    </nav>
+
+    <main class="py-10 space-y-12">
+
+        <!-- Tool Header -->
+        <header class="space-y-3">
+            <div class="inline-block text-[11px] font-semibold uppercase tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">
+                Laravel &amp; PHP 8.2+ Architecture
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold text-white tracking-tight">
+                JSON to PHP 8.2+ <span class="text-blue-400">Readonly DTO</span>
+            </h1>
+            <p class="text-slate-400 max-w-2xl text-sm md:text-base leading-relaxed">
+                Paste any third-party webhook or REST API JSON payload to generate an immutable <code class="text-cyan-300">final readonly class</code> with strict constructor property promotion and <code class="text-cyan-300">fromArray()</code> mapping.
+            </p>
+        </header>
+
+        <!-- Interactive Tool UI -->
+        <section class="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="dto-namespace" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        Namespace
+                    </label>
+                    <input type="text" id="dto-namespace" value="App\DataTransferObjects"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-sm text-cyan-300 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="dto-classname" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        Class Name
+                    </label>
+                    <input type="text" id="dto-classname" value="CallWebhookData"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-sm text-cyan-300 focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label for="json-input" class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Sample JSON Object
+                    </label>
+                    <button type="button" onclick="loadJsonSample()"
+                            class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
+                        Reset Sample JSON
+                    </button>
+                </div>
+                <textarea id="json-input" rows="7"
+                          class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-xs md:text-sm text-cyan-300 focus:outline-none focus:border-blue-500"></textarea>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-4">
+                <button type="button" onclick="generateDto()"
+                        class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-colors">
+                    Generate PHP DTO
+                </button>
+                <button type="button" id="copy-dto-btn" onclick="copyDto()"
+                        class="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition-colors">
+                    Copy PHP Class
+                </button>
+            </div>
+
+            <div id="dto-error" class="hidden text-xs text-rose-400 bg-rose-950/40 border border-rose-500/40 rounded-xl p-3.5"></div>
+
+            <div class="space-y-2">
+                <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Generated PHP 8.2+ Class</span>
+                <pre id="dto-output" class="bg-slate-950 border border-slate-800 rounded-2xl p-5 font-mono text-xs text-cyan-300 overflow-x-auto leading-relaxed"></pre>
+            </div>
+        </section>
+
+        <!-- Technical Guide & FAQ -->
+        <article class="max-w-3xl space-y-6 text-slate-300 text-sm md:text-[15px] leading-relaxed pt-4 border-t border-slate-800/80">
+            <h2 class="text-2xl font-bold text-white">Why Use Final Readonly DTOs Instead of Associative Arrays in Laravel?</h2>
+            <p>
+                Passing raw <code class="text-blue-300">$request-&gt;validated()</code> arrays or decoded webhook payloads across Laravel Actions, Queue Jobs, and Services forces every downstream consumer to guess array keys and nullable types. Introducing <code class="text-blue-300">final readonly class</code> Data Transfer Objects in PHP 8.2+ gives your IDE, PHPStan, and Larastan full static analysis guarantees while preventing accidental mutation inside asynchronous queue pipelines.
+            </p>
+
+            <h3 class="text-xl font-bold text-white pt-2">Key Benefits in Production Laravel Codebases</h3>
+            <ul class="list-disc pl-6 space-y-2 text-slate-300">
+                <li><strong class="text-white">Immutability by default:</strong> Declaring <code class="text-blue-300">final readonly class</code> marks every promoted property as read-only automatically, eliminating boilerplate <code class="text-blue-300">readonly</code> keywords on individual constructor parameters.</li>
+                <li><strong class="text-white">Clean boundary hydration:</strong> Mapping snake_case JSON keys (like <code class="text-blue-300">recording_url</code>) into camelCase PHP properties (<code class="text-blue-300">$recordingUrl</code>) inside a static <code class="text-blue-300">fromArray()</code> factory keeps external API naming conventions isolated at the controller or webhook boundary.</li>
+                <li><strong class="text-white">Queue serialization safety:</strong> Simple scalar-backed DTOs serialize cleanly into Redis queue payloads without carrying bloated Eloquent model relations.</li>
+            </ul>
+
+            <h3 class="text-xl font-bold text-white pt-2">Frequently Asked Questions</h3>
+            <div class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-white">What PHP version is required for <code class="text-blue-300">readonly class</code>?</h4>
+                    <p class="text-slate-400">Readonly properties were introduced in PHP 8.1, while class-level <code class="text-blue-300">readonly class</code> declarations were added in PHP 8.2 and are fully supported in PHP 8.3 and PHP 8.4.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-white">How are null values in the sample JSON typed?</h4>
+                    <p class="text-slate-400">Any field whose sample value is <code class="text-blue-300">null</code> is typed as <code class="text-blue-300">mixed</code> with a <code class="text-blue-300">null</code> default fallback in <code class="text-blue-300">fromArray()</code>—replace <code class="text-blue-300">mixed</code> with <code class="text-blue-300">?string</code> or <code class="text-blue-300">?int</code> once you confirm the API's nullable schema.</p>
+                </div>
+            </div>
+        </article>
+
+    </main>
+</div>
+
+<!-- Footer -->
+<footer class="max-w-5xl mx-auto px-6 w-full py-10 mt-12 border-t border-slate-800 text-xs text-slate-500 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div class="space-y-1.5">
+        <p class="text-slate-400">&copy; 2026 LaraTools.dev &mdash; Built by <a href="https://gulfaraz.me" class="text-blue-400 hover:underline">Gulfaraz Arshad</a></p>
+        <p class="text-[11px] text-slate-600">Not affiliated with or endorsed by Laravel Holdings Inc. Laravel is a registered trademark of Laravel Holdings Inc.</p>
+    </div>
+    <div class="flex flex-wrap gap-5">
+        <a href="/about.html" class="hover:text-slate-300 transition-colors">About</a>
+        <a href="/contact.html" class="hover:text-slate-300 transition-colors">Contact</a>
+        <a href="/privacy-policy.html" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+        <a href="/terms.html" class="hover:text-slate-300 transition-colors">Terms of Use</a>
+    </div>
+</footer>
+
+<script>
+    function toCamelCase(str) {
+        return str
+            .replace(/[^a-zA-Z0-9_]/g, '_')
+            .replace(/_+([a-zA-Z0-9])/g, (_, c) => c.toUpperCase())
+            .replace(/^[A-Z]/, c => c.toLowerCase());
+    }
+
+    function inferPhpType(val) {
+        if (val === null) return { type: 'mixed', cast: '' };
+        if (typeof val === 'boolean') return { type: 'bool', cast: '(bool) ' };
+        if (typeof val === 'number') {
+            return Number.isInteger(val)
+                ? { type: 'int', cast: '(int) ' }
+                : { type: 'float', cast: '(float) ' };
+        }
+        if (typeof val === 'string') return { type: 'string', cast: '(string) ' };
+        if (Array.isArray(val) || typeof val === 'object') return { type: 'array', cast: '(array) ' };
+        return { type: 'mixed', cast: '' };
+    }
+
+    function loadJsonSample() {
+        document.getElementById('json-input').value = JSON.stringify({
+            call_sid: "CA891234abcdef",
+            workspace_id: 42,
+            cost_usd: 0.0145,
+            is_answered: true,
+            recording_url: null,
+            tags: ["inbound", "sales"]
+        }, null, 2);
+        generateDto();
+    }
+
+    function generateDto() {
+        const ns = document.getElementById('dto-namespace').value.trim() || 'App\\DataTransferObjects';
+        const className = document.getElementById('dto-classname').value.trim().replace(/[^a-zA-Z0-9_]/g, '') || 'PayloadData';
+        const rawJson = document.getElementById('json-input').value.trim();
+        const errBox = document.getElementById('dto-error');
+        const outBox = document.getElementById('dto-output');
+
+        errBox.classList.add('hidden');
+
+        let parsed;
+        try {
+            parsed = JSON.parse(rawJson);
+            if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+                throw new Error('Top-level JSON must be a key-value object { ... }.');
+            }
+        } catch (e) {
+            errBox.innerText = 'Invalid JSON: ' + e.message;
+            errBox.classList.remove('hidden');
+            return;
+        }
+
+        const entries = Object.entries(parsed);
+        const ctorLines = [];
+        const fromLines = [];
+        const toLines = [];
+
+        entries.forEach(([key, val]) => {
+            const prop = toCamelCase(key) || 'field';
+            const { type, cast } = inferPhpType(val);
+            const isNullable = val === null;
+            const phpType = isNullable ? 'mixed' : type;
+            const defaultVal = isNullable ? ' = null' : '';
+
+            ctorLines.push(`        public ${phpType} $${prop}${defaultVal},`);
+            if (isNullable) {
+                fromLines.push(`            ${prop}: $data['${key}'] ?? null,`);
+            } else {
+                const fallback = type === 'string' ? "''" : (type === 'int' ? '0' : (type === 'float' ? '0.0' : (type === 'bool' ? 'false' : '[]')));
+                fromLines.push(`            ${prop}: ${cast}($data['${key}'] ?? ${fallback}),`);
+            }
+            toLines.push(`            '${key}' => $this->${prop},`);
+        });
+
+        const code = `<?php
+
+declare(strict_types=1);
+
+namespace ${ns};
+
+final readonly class ${className}
+{
+    public function __construct(
+${ctorLines.join('\n')}
+    ) {}
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+${fromLines.join('\n')}
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+${toLines.join('\n')}
+        ];
+    }
+}`;
+
+        outBox.textContent = code;
+    }
+
+    function copyDto() {
+        const text = document.getElementById('dto-output').textContent;
+        navigator.clipboard.writeText(text);
+        const btn = document.getElementById('copy-dto-btn');
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = 'Copy PHP Class', 1500);
+    }
+
+    loadJsonSample();
+</script>
+
+</body>
+</html>

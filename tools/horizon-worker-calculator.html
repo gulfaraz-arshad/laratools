@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+          content="Calculate Laravel Horizon and Redis queue worker throughput, backlog drain time, and worst-case server RAM usage to prevent OOM-killer crashes.">
+    <title>Laravel Horizon &amp; Redis Queue Worker Calculator | LaraTools.dev</title>
+    <link rel="canonical" href="https://laratools.dev/tools/horizon-worker-calculator.html">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9972929677112087"
+            crossorigin="anonymous"></script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .brand { font-family: 'Syne', sans-serif; }
+        .bg-grid {
+            background-color: #09090b;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+    </style>
+</head>
+<body class="bg-grid text-slate-200 antialiased min-h-screen flex flex-col">
+
+<div class="max-w-5xl mx-auto px-6 w-full flex-1">
+
+    <!-- Navbar -->
+    <nav class="flex justify-between items-center py-8 border-b border-slate-800/80">
+        <a href="/" class="brand text-xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+            <span class="px-2 py-0.5 rounded-lg bg-blue-600 text-xs font-mono text-white">LT</span>
+            <span>laratools<span class="text-blue-400">.dev</span></span>
+        </a>
+        <div class="flex items-center gap-6 text-xs font-medium text-slate-400">
+            <a href="/" class="text-blue-400">Tools</a>
+            <a href="/about.html" class="hover:text-white transition-colors">About</a>
+            <a href="/contact.html" class="hover:text-white transition-colors">Contact</a>
+            <a href="https://gulfaraz.me/blog/" target="_blank" rel="noopener" class="hover:text-white transition-colors">Engineering Blog &nearr;</a>
+        </div>
+    </nav>
+
+    <main class="py-10 space-y-12">
+
+        <!-- Tool Header -->
+        <header class="space-y-3">
+            <div class="inline-block text-[11px] font-semibold uppercase tracking-widest text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">
+                Laravel Horizon &amp; Redis Capacity
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold text-white tracking-tight">
+                Horizon Queue &amp; <span class="text-blue-400">Worker Calculator</span>
+            </h1>
+            <p class="text-slate-400 max-w-2xl text-sm md:text-base leading-relaxed">
+                Size your <code class="text-cyan-300">config/horizon.php</code> supervisor processes, estimate backlog drain times, and calculate worst-case PHP worker RAM usage before Linux OOM-killer terminates your processes.
+            </p>
+        </header>
+
+        <!-- Interactive Tool UI -->
+        <section class="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 md:p-8 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label for="worker-count" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        Max Processes (<code class="text-cyan-400">maxProcesses</code>)
+                    </label>
+                    <input type="number" id="worker-count" value="16" min="1" max="500"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-sm text-cyan-300 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="job-duration" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        Avg Job Duration (ms)
+                    </label>
+                    <input type="number" id="job-duration" value="120" min="1" max="600000"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-sm text-cyan-300 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="memory-limit" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        Worker Memory Limit (MB)
+                    </label>
+                    <input type="number" id="memory-limit" value="128" min="32" max="4096"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-sm text-cyan-300 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="backlog-jobs" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                        Pending Backlog (Jobs)
+                    </label>
+                    <input type="number" id="backlog-jobs" value="250000" min="0"
+                           class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 font-mono text-sm text-cyan-300 focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+
+            <!-- Metrics Output -->
+            <div id="horizon-metrics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+
+            <!-- Config Snippet -->
+            <div class="space-y-2 pt-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Recommended <code class="text-cyan-400">config/horizon.php</code> Supervisor Block</span>
+                    <button type="button" id="copy-horizon-btn" onclick="copyHorizonConfig()"
+                            class="text-xs px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors">
+                        Copy Config
+                    </button>
+                </div>
+                <pre id="horizon-config" class="bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-xs text-cyan-300 overflow-x-auto leading-relaxed"></pre>
+            </div>
+        </section>
+
+        <!-- Technical Guide & FAQ -->
+        <article class="max-w-3xl space-y-6 text-slate-300 text-sm md:text-[15px] leading-relaxed pt-4 border-t border-slate-800/80">
+            <h2 class="text-2xl font-bold text-white">Sizing Laravel Horizon Supervisors Without Exhausting Server RAM</h2>
+            <p>
+                Unlike traditional PHP-FPM requests that tear down memory after every HTTP response, Laravel Horizon workers run as long-lived daemon processes. While persistent workers eliminate framework boot overhead, setting <code class="text-blue-300">maxProcesses</code> too high relative to physical RAM and <code class="text-blue-300">memory_limit</code> is the #1 cause of sudden Linux Out-Of-Memory (OOM) worker terminations during traffic spikes.
+            </p>
+
+            <h3 class="text-xl font-bold text-white pt-2">3 Rules for High-Throughput Redis Queues</h3>
+            <ul class="list-disc pl-6 space-y-2 text-slate-300">
+                <li><strong class="text-white">Budget for worst-case memory (<code class="text-blue-300">Workers &times; Memory Limit</code>):</strong> Always leave at least 25%–30% of total VPS/server RAM reserved for the OS kernel, Redis in-memory datasets, PHP-FPM web workers, and MySQL buffers.</li>
+                <li><strong class="text-white">Isolate I/O-bound vs. CPU-bound queues:</strong> Webhook dispatches and external HTTP API calls spend most of their duration waiting on network sockets—you can safely run 16–32 workers per 4 vCPUs. CPU-heavy CSV exports or PDF generators should be isolated on a separate supervisor capped near your vCPU count.</li>
+                <li><strong class="text-white">Rotate workers with <code class="text-blue-300">maxJobs</code>:</strong> Setting <code class="text-blue-300">'maxJobs' =&gt; 1000</code> instructs Horizon to gracefully recycle a worker process after 1,000 jobs, preventing gradual memory fragmentation from third-party SDKs.</li>
+            </ul>
+
+            <h3 class="text-xl font-bold text-white pt-2">Frequently Asked Questions</h3>
+            <div class="space-y-4">
+                <div>
+                    <h4 class="font-semibold text-white">What happens if <code class="text-blue-300">retry_after</code> is shorter than Horizon's <code class="text-blue-300">timeout</code>?</h4>
+                    <p class="text-slate-400">Redis will release the job back onto the queue while the first worker is still executing it, causing duplicate execution (double emails, duplicate SMS sends, or duplicate database writes). Always keep <code class="text-blue-300">retry_after</code> in <code class="text-blue-300">config/queue.php</code> at least 30 seconds higher than your supervisor's <code class="text-blue-300">timeout</code>.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-white">Should I use <code class="text-blue-300">auto</code> or <code class="text-blue-300">simple</code> balancing?</h4>
+                    <p class="text-slate-400">Use <code class="text-blue-300">'balance' =&gt; 'auto'</code> when a single supervisor handles multiple queues (e.g. <code class="text-blue-300">['high', 'default', 'exports']</code>) so Horizon dynamically shifts idle workers toward whichever queue has the longest wait time.</p>
+                </div>
+            </div>
+        </article>
+
+    </main>
+</div>
+
+<!-- Footer -->
+<footer class="max-w-5xl mx-auto px-6 w-full py-10 mt-12 border-t border-slate-800 text-xs text-slate-500 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+    <div class="space-y-1.5">
+        <p class="text-slate-400">&copy; 2026 LaraTools.dev &mdash; Built by <a href="https://gulfaraz.me" class="text-blue-400 hover:underline">Gulfaraz Arshad</a></p>
+        <p class="text-[11px] text-slate-600">Not affiliated with or endorsed by Laravel Holdings Inc. Laravel is a registered trademark of Laravel Holdings Inc.</p>
+    </div>
+    <div class="flex flex-wrap gap-5">
+        <a href="/about.html" class="hover:text-slate-300 transition-colors">About</a>
+        <a href="/contact.html" class="hover:text-slate-300 transition-colors">Contact</a>
+        <a href="/privacy-policy.html" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+        <a href="/terms.html" class="hover:text-slate-300 transition-colors">Terms of Use</a>
+    </div>
+</footer>
+
+<script>
+    function formatDuration(seconds) {
+        if (!isFinite(seconds) || seconds <= 0) return '0s';
+        if (seconds < 60) return `${Math.ceil(seconds)}s`;
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.round(seconds % 60);
+        if (mins < 60) return `${mins}m ${secs}s`;
+        const hrs = Math.floor(mins / 60);
+        const remMins = mins % 60;
+        return `${hrs}h ${remMins}m`;
+    }
+
+    function calculateHorizon() {
+        const workers = Math.max(1, parseInt(document.getElementById('worker-count').value, 10) || 1);
+        const durationMs = Math.max(1, parseFloat(document.getElementById('job-duration').value) || 100);
+        const memoryMb = Math.max(32, parseInt(document.getElementById('memory-limit').value, 10) || 128);
+        const backlog = Math.max(0, parseInt(document.getElementById('backlog-jobs').value, 10) || 0);
+
+        const jobsPerSec = (workers * 1000) / durationMs;
+        const jobsPerMin = Math.round(jobsPerSec * 60);
+        const jobsPerHour = Math.round(jobsPerMin * 60);
+        const peakRamGb = ((workers * memoryMb) / 1024).toFixed(2);
+        const drainSec = backlog > 0 ? backlog / jobsPerSec : 0;
+
+        document.getElementById('horizon-metrics').innerHTML = `
+            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+                <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Throughput / Min</div>
+                <div class="text-2xl font-bold text-white mt-1">${jobsPerMin.toLocaleString()}</div>
+                <div class="text-xs text-slate-400 mt-0.5">${jobsPerSec.toFixed(1)} jobs/sec</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+                <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Throughput / Hour</div>
+                <div class="text-2xl font-bold text-cyan-400 mt-1">${jobsPerHour.toLocaleString()}</div>
+                <div class="text-xs text-slate-400 mt-0.5">Sustained capacity</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+                <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Backlog Drain Time</div>
+                <div class="text-2xl font-bold text-emerald-400 mt-1">${formatDuration(drainSec)}</div>
+                <div class="text-xs text-slate-400 mt-0.5">For ${backlog.toLocaleString()} jobs</div>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+                <div class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">Worst-Case RAM</div>
+                <div class="text-2xl font-bold text-amber-400 mt-1">${peakRamGb} GB</div>
+                <div class="text-xs text-slate-400 mt-0.5">${workers} &times; ${memoryMb} MB</div>
+            </div>
+        `;
+
+        const minProcs = Math.max(1, Math.min(4, Math.floor(workers / 4)));
+        document.getElementById('horizon-config').textContent = `'supervisor-1' => [
+    'connection' => 'redis',
+    'queue' => ['high', 'default'],
+    'balance' => 'auto',
+    'autoScalingStrategy' => 'time',
+    'minProcesses' => ${minProcs},
+    'maxProcesses' => ${workers},
+    'balanceMaxShift' => 2,
+    'balanceCooldown' => 3,
+    'maxTime' => 0,
+    'maxJobs' => 1000,
+    'memory' => ${memoryMb},
+    'tries' => 3,
+    'timeout' => 60,
+    'nice' => 0,
+],`;
+    }
+
+    function copyHorizonConfig() {
+        const text = document.getElementById('horizon-config').textContent;
+        navigator.clipboard.writeText(text);
+        const btn = document.getElementById('copy-horizon-btn');
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = 'Copy Config', 1500);
+    }
+
+    ['worker-count', 'job-duration', 'memory-limit', 'backlog-jobs'].forEach(id => {
+        document.getElementById(id).addEventListener('input', calculateHorizon);
+    });
+
+    calculateHorizon();
+</script>
+
+</body>
+</html>
